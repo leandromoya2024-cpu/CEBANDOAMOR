@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cebando Amor - Catálogo Pro</title>
+    <style>
+        :root {
+            --beige: #F5F5DC;
+            --brown: #4A3728;
+            --light-brown: #8B7355;
+            --white: #ffffff;
+            --whatsapp: #25D366;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--beige); color: var(--brown); line-height: 1.6; padding-bottom: 80px; }
+
+        header { background: var(--brown); color: var(--beige); padding: 2rem 1rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+
+        nav { background: var(--light-brown); padding: 0.5rem; display: flex; overflow-x: auto; white-space: nowrap; gap: 1rem; justify-content: center; position: sticky; top: 0; z-index: 100; }
+        nav a { color: var(--beige); text-decoration: none; font-weight: bold; font-size: 0.9rem; padding: 0.5rem 1rem; }
+
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .section-title { border-bottom: 2px solid var(--brown); margin: 2rem 0 1rem; padding-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+        .card { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); }
+        .card img { width: 100%; height: 250px; object-fit: cover; cursor: zoom-in; }
+        .card-body { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem; height: 3rem; overflow: hidden; }
+        .card-price { color: var(--light-brown); font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem; }
+
+        .btn-add { background: var(--brown); color: var(--beige); border: none; padding: 0.8rem; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; }
+        .btn-add:hover { background: #5a4636; }
+
+        /* Carrito flotante */
+        #cart-trigger { position: fixed; bottom: 20px; right: 20px; background: var(--whatsapp); color: white; border: none; padding: 15px 25px; border-radius: 50px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+        #cart-count { background: white; color: var(--whatsapp); padding: 2px 8px; border-radius: 50%; font-size: 0.8rem; }
+
+        /* Modal Carrito */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2000; }
+        .modal-content { background: var(--beige); max-width: 450px; margin: 10vh auto; border-radius: 15px; padding: 1.5rem; position: relative; max-height: 80vh; overflow-y: auto; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .close { position: absolute; top: 0.5rem; right: 1rem; font-size: 2rem; cursor: pointer; color: var(--brown); }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #ddd; }
+        .qty-controls { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+        .qty-btn { background: var(--brown); color: white; border: none; width: 28px; height: 28px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .total-row { margin-top: 1.5rem; font-size: 1.4rem; font-weight: bold; display: flex; justify-content: space-between; border-top: 2px solid var(--brown); padding-top: 1rem; }
+        .btn-checkout { background: var(--whatsapp); color: white; border: none; width: 100%; padding: 1.2rem; border-radius: 10px; font-size: 1.1rem; font-weight: bold; margin-top: 1rem; cursor: pointer; }
+
+        /* Modal Imagen */
+        #image-viewer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; cursor: zoom-out; }
+        #image-viewer img { max-width: 95%; max-height: 90vh; border: 2px solid var(--beige); }
+
+        @media (max-width: 600px) {
+            header h1 { font-size: 1.6rem; }
+            .grid { grid-template-columns: 1fr; }
+            .modal-content { margin: 5vh 1rem; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🧉 Cebando Amor</h1>
+    <p>Todo para tu ritual mateador</p>
+</header>
+
+<nav id="category-nav"></nav>
+
+<div class="container" id="products-container"></div>
+
+<button id="cart-trigger" onclick="toggleCart()">
+    🛒 Ver Pedido <span id="cart-count">0</span>
+</button>
+
+<div id="cart-modal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="toggleCart()">&times;</span>
+        <h2 style="margin-bottom: 1rem; text-align: center;">Tu Pedido</h2>
+        <div id="cart-items-list">
+            <p style="text-align: center; color: #888;">El carrito está vacío</p>
+        </div>
+        <div class="total-row">
+            <span>Total:</span>
+            <span id="cart-total-price">$0</span>
+        </div>
+        <button class="btn-checkout" onclick="sendToWhatsApp()">Finalizar por WhatsApp</button>
+    </div>
+</div>
+
+<div id="image-viewer" onclick="this.style.display='none'">
+    <img id="full-image" src="">
+</div>
+
+<script>
+// USARÉ LOS BASE64 DEL ARCHIVO ORIGINAL PARA LAS IMÁGENES
+// (Simulado aquí con placeholders, pero el script final los inyectará)
+const products = [{"category": "Yerbas", "name": "Yerba Canarias 1kg", "price": 12000, "img": ""}, {"category": "Yerbas", "name": "Yerba Baldo 1kg", "price": 11500, "img": ""}, {"category": "Yerbas", "name": "Yerba Amanda 1kg", "price": 11800, "img": ""}, {"category": "Accesorios", "name": "Bombilla de Acero", "price": 4500, "img": ""}, {"category": "Accesorios", "name": "Mate de Madera", "price": 7500, "img": ""}, {"category": "Regalos", "name": "Pack Mate + Bombilla", "price": 16000, "img": ""}];
+
+let cart = [];
+
+function init() {
+    const container = document.getElementById('products-container');
+    const nav = document.getElementById('category-nav');
+    const categories = [...new Set(products.map(p => p.category))];
+
+    categories.forEach(cat => {
+        const link = document.createElement('a');
+        link.href = `#${cat.toLowerCase()}`;
+        link.innerText = cat;
+        nav.appendChild(link);
+
+        const h2 = document.createElement('h2');
+        h2.className = 'section-title';
+        h2.id = cat.toLowerCase();
+        h2.innerText = cat;
+        container.appendChild(h2);
+
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        
+        products.filter(p => p.category === cat).forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <img src="https://via.placeholder.com/400x300?text=${encodeURIComponent(p.name)}" onclick="viewImage(this.src)">
+                <div class="card-body">
+                    <div>
+                        <div class="card-title">${p.name}</div>
+                        <div class="card-price">$${p.price.toLocaleString()}</div>
+                    </div>
+                    <button class="btn-add" onclick="addToCart('${p.name}', ${p.price})">Añadir al Carrito</button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+        container.appendChild(grid);
+    });
+}
+
+function viewImage(src) {
+    document.getElementById('full-image').src = src;
+    document.getElementById('image-viewer').style.display = 'flex';
+}
+
+function addToCart(name, price) {
+    const existing = cart.find(item => item.name === name);
+    if (existing) {
+        existing.qty++;
+    } else {
+        cart.push({ name, price, qty: 1 });
+    }
+    updateUI();
+}
+
+function updateUI() {
+    const list = document.getElementById('cart-items-list');
+    const count = document.getElementById('cart-count');
+    const total = document.getElementById('cart-total-price');
+    
+    list.innerHTML = '';
+    let totalValue = 0;
+    let totalItems = 0;
+
+    cart.forEach((item, index) => {
+        totalValue += item.price * item.qty;
+        totalItems += item.qty;
+        
+        const row = document.createElement('div');
+        row.className = 'cart-item';
+        row.innerHTML = `
+            <div style="flex-grow:1">
+                <strong>${item.name}</strong><br>
+                <div class="qty-controls">
+                    <button class="qty-btn" onclick="changeQty(${index}, -1)">-</button>
+                    <span style="font-weight:bold">${item.qty}</span>
+                    <button class="qty-btn" onclick="changeQty(${index}, 1)">+</button>
+                    <span style="margin-left:10px; color:#888">$${(item.price * item.qty).toLocaleString()}</span>
+                </div>
+            </div>
+            <button onclick="removeItem(${index})" style="background:none; border:none; color:red; cursor:pointer; font-size:1.2rem">✕</button>
+        `;
+        list.appendChild(row);
+    });
+
+    if (cart.length === 0) list.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">El carrito está vacío</p>';
+    
+    count.innerText = totalItems;
+    total.innerText = '$' + totalValue.toLocaleString();
+}
+
+function changeQty(index, delta) {
+    cart[index].qty += delta;
+    if (cart[index].qty < 1) cart.splice(index, 1);
+    updateUI();
+}
+
+function removeItem(index) {
+    cart.splice(index, 1);
+    updateUI();
+}
+
+function toggleCart() {
+    const m = document.getElementById('cart-modal');
+    m.style.display = (m.style.display === 'block' ? 'none' : 'block');
+}
+
+function sendToWhatsApp() {
+    if (cart.length === 0) return alert('El carrito está vacío');
+    let text = "¡Hola Cebando Amor! 👋 Quisiera realizar el siguiente pedido:\n\n";
+    let total = 0;
+    cart.forEach(item => {
+        text += `📌 ${item.qty}x ${item.name} - $${(item.price * item.qty).toLocaleString()}\n`;
+        total += item.price * item.qty;
+    });
+    text += `\n💰 *Total: $${total.toLocaleString()}*`;
+    const url = `https://wa.me/542612543395?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
